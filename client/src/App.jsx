@@ -8,6 +8,7 @@ export default function App() {
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [downloadingFormatId, setDownloadingFormatId] = useState(null);
 
+  const API_BASE = 'http://188.166.249.28:4000';
   const handleDownloadClick = async () => {
     setError('');
     setDownloadSuccess(false);
@@ -17,7 +18,7 @@ export default function App() {
     }
     setLoading(true);
     try {
-      const response = await fetch('/api/video-info', {
+      const response = await fetch(`${API_BASE}/api/video-info`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
@@ -45,12 +46,12 @@ export default function App() {
       // Always use backend proxy download to avoid 403 errors
       const videoId = videoInfo.id || (videoInfo.videoDetails && videoInfo.videoDetails.videoId);
       const formatId = format.itag;
-      const downloadUrl = `/api/download?id=${videoId}&formatId=${formatId}`;
+      const downloadUrl = `${API_BASE}/api/download?id=${videoId}&formatId=${formatId}`;
       const res = await fetch(downloadUrl);
       if (!res.ok) {
         const errText = await res.text();
         setError('Download failed. ' + errText);
-        setDownloading(false);
+        setDownloadingFormatId(null);
         return;
       }
       // Start download
