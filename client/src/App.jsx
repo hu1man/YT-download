@@ -8,7 +8,7 @@ export default function App() {
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [downloadingFormatId, setDownloadingFormatId] = useState(null);
 
-  const API_BASE = 'https://vidunvdulmika.duckdns.org:4000';
+  const API_BASE = 'https://vidunvdulmika.duckdns.org';
   const handleDownloadClick = async () => {
     setError('');
     setDownloadSuccess(false);
