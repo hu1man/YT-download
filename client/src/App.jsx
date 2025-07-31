@@ -90,84 +90,90 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
-      <div className="bg-gray-800 bg-opacity-30 backdrop-blur-lg rounded-2xl p-8 max-w-lg w-full shadow-lg">
-        <h1 className="text-3xl font-bold mb-6 text-center">YouTube Video Downloader</h1>
-        {!videoInfo && (
-          <div className="flex">
-            <input
-              type="text"
-              placeholder="Paste YouTube video URL here"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="flex-grow rounded-l-2xl bg-gray-700 bg-opacity-50 px-4 py-3 text-white placeholder-gray-400 focus:outline-none"
-            />
-            <button
-              onClick={handleDownloadClick}
-              className="bg-blue-600 hover:bg-blue-700 rounded-r-2xl px-6 py-3 transition"
-              disabled={loading}
-            >
-              {loading ? 'Loading...' : 'Download'}
-            </button>
-          </div>
-        )}
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col justify-between p-4">
+      <div className="flex-grow flex items-center justify-center">
+        <div className="bg-gray-800 bg-opacity-30 backdrop-blur-lg rounded-2xl p-8 max-w-lg w-full shadow-lg">
+          <h1 className="text-3xl font-bold mb-6 text-center">YouTube Video Downloader</h1>
+          {!videoInfo && (
+            <div className="flex">
+              <input
+                type="text"
+                placeholder="Paste YouTube video URL here"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="flex-grow rounded-l-2xl bg-gray-700 bg-opacity-50 px-4 py-3 text-white placeholder-gray-400 focus:outline-none"
+              />
+              <button
+                onClick={handleDownloadClick}
+                className="bg-blue-600 hover:bg-blue-700 rounded-r-2xl px-6 py-3 transition"
+                disabled={loading}
+              >
+                {loading ? 'Loading...' : 'Download'}
+              </button>
+            </div>
+          )}
 
-        {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
+          {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
 
-        {videoInfo && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-4">{videoInfo.title || videoInfo.videoDetails?.title}</h2>
-            <img
-              src={getThumbnailUrl()}
-              alt="Thumbnail"
-              className="mb-4 rounded-lg mx-auto"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = 'https://img.youtube.com/vi/' + (videoInfo.id || videoInfo.videoDetails?.videoId || 'dQw4w9WgXcQ') + '/hqdefault.jpg';
-              }}
-            />
-            {videoInfo.formats && videoInfo.formats.length > 0 ? (
-              <ul>
-                {videoInfo.formats.map((format) => (
-                  <li key={format.itag} className="flex flex-col md:flex-row justify-between items-center mb-3 bg-gray-700 bg-opacity-40 rounded-lg px-4 py-2">
-                    <span>
-                      <b>{format.qualityLabel || format.quality || format.format_note || 'Unknown Quality'}</b>
-                      {format.hasAudio ? ' (with audio)' : ' (no audio)'}
-                      {format.container ? ` [${format.container}]` : ''}
-                      {format.contentLength ? ` - ${(format.contentLength / (1024 * 1024)).toFixed(2)} MB` : ''}
-                    </span>
-                    <button
-                      onClick={() => handleQualityDownload(format)}
-                      className={`bg-green-600 hover:bg-green-700 rounded px-4 py-1 mt-2 md:mt-0 transition ${downloadingFormatId === format.itag ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={!!downloadingFormatId}
-                    >
-                      {downloadingFormatId === format.itag ? 'Downloading...' : 'Download'}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No downloadable formats available.</p>
-            )}
-            {downloadSuccess && (
-              <div className="mt-4 p-3 bg-green-700 bg-opacity-70 rounded text-center">
-                Download started successfully!
-              </div>
-            )}
-            <button
-              onClick={() => {
-                setVideoInfo(null);
-                setUrl('');
-                setError('');
-                setDownloadSuccess(false);
-              }}
-              className="mt-6 w-full bg-red-600 hover:bg-red-700 rounded py-2 transition"
-            >
-              Search Another Video
-            </button>
-          </div>
-        )}
+          {videoInfo && (
+            <div className="mt-6">
+              <h2 className="text-xl font-semibold mb-4">{videoInfo.title || videoInfo.videoDetails?.title}</h2>
+              <img
+                src={getThumbnailUrl()}
+                alt="Thumbnail"
+                className="mb-4 rounded-lg mx-auto"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://img.youtube.com/vi/' + (videoInfo.id || videoInfo.videoDetails?.videoId || 'dQw4w9WgXcQ') + '/hqdefault.jpg';
+                }}
+              />
+              {videoInfo.formats && videoInfo.formats.length > 0 ? (
+                <ul>
+                  {videoInfo.formats.map((format) => (
+                    <li key={format.itag} className="flex flex-col md:flex-row justify-between items-center mb-3 bg-gray-700 bg-opacity-40 rounded-lg px-4 py-2">
+                      <span>
+                        <b>{format.qualityLabel || format.quality || format.format_note || 'Unknown Quality'}</b>
+                        {format.hasAudio ? ' (with audio)' : ' (no audio)'}
+                        {format.container ? ` [${format.container}]` : ''}
+                        {format.contentLength ? ` - ${(format.contentLength / (1024 * 1024)).toFixed(2)} MB` : ''}
+                      </span>
+                      <button
+                        onClick={() => handleQualityDownload(format)}
+                        className={`bg-green-600 hover:bg-green-700 rounded px-4 py-1 mt-2 md:mt-0 transition ${downloadingFormatId === format.itag ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={!!downloadingFormatId}
+                      >
+                        {downloadingFormatId === format.itag ? 'Downloading...' : 'Download'}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No downloadable formats available.</p>
+              )}
+              {downloadSuccess && (
+                <div className="mt-4 p-3 bg-green-700 bg-opacity-70 rounded text-center">
+                  Download started successfully!
+                </div>
+              )}
+              <button
+                onClick={() => {
+                  setVideoInfo(null);
+                  setUrl('');
+                  setError('');
+                  setDownloadSuccess(false);
+                }}
+                className="mt-6 w-full bg-red-600 hover:bg-red-700 rounded py-2 transition"
+              >
+                Search Another Video
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+      <footer className="mt-8 text-center text-gray-400">
+        Made with <span className="text-red-500">❤</span> by <span className="text-blue-400 font-bold">HU1MAN</span> |
+        <a href="https://github.com/hu1man" target="_blank" rel="noopener noreferrer" className="text-blue-300 underline ml-1">Github</a>
+      </footer>
     </div>
   );
 }
