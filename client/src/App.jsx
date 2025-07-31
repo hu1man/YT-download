@@ -8,7 +8,7 @@ export default function App() {
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [downloadingFormatId, setDownloadingFormatId] = useState(null);
 
-  const API_BASE = 'https://vidunvdulmika.duckdns.org:4443';
+  const API_BASE = 'https://yt-download-ff6b.onrender.com';
   const handleDownloadClick = async () => {
     setError('');
     setDownloadSuccess(false);
