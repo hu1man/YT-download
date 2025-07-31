@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const ytdl = require('ytdl-core');
-const { execFile } = require('child_process');
+const ytdlp = require('yt-dlp-exec');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -31,36 +31,33 @@ app.post('/api/video-info', async (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'YouTube URL is required' });
 
-  // Use yt-dlp to get video info as JSON
-  execFile('yt-dlp', ['-j', '--cookies', 'cookies.txt', url], (error, stdout, stderr) => {
-    if (error) {
-      console.error('yt-dlp error:', error, stderr);
-      return res.status(500).json({ error: 'Failed to fetch video info', details: stderr });
-    }
-    try {
-      const info = JSON.parse(stdout);
-      // Map formats for frontend
-      const formats = (info.formats || []).filter(f => f.vcodec !== 'none').map(f => ({
-        itag: f.format_id,
-        qualityLabel: f.format_note || f.resolution || f.quality,
-        contentLength: f.filesize || f.filesize_approx || null,
-        mimeType: f.ext,
-        url: f.url,
-        hasAudio: f.acodec !== 'none',
-        container: f.ext,
-      }));
-      res.json({
-        id: info.id,
-        title: info.title,
-        thumbnail: info.thumbnail,
-        formats,
-        videoDetails: info,
-      });
-    } catch (err) {
-      console.error('Error parsing yt-dlp output:', err);
-      res.status(500).json({ error: 'Failed to parse video info', details: err.message });
-    }
-  });
+  // Use yt-dlp-exec to get video info as JSON
+  try {
+    const info = await ytdlp(url, {
+      dumpJson: true,
+      cookies: 'cookies.txt',
+    });
+    // Map formats for frontend
+    const formats = (info.formats || []).filter(f => f.vcodec !== 'none').map(f => ({
+      itag: f.format_id,
+      qualityLabel: f.format_note || f.resolution || f.quality,
+      contentLength: f.filesize || f.filesize_approx || null,
+      mimeType: f.ext,
+      url: f.url,
+      hasAudio: f.acodec !== 'none',
+      container: f.ext,
+    }));
+    res.json({
+      id: info.id,
+      title: info.title,
+      thumbnail: info.thumbnail,
+      formats,
+      videoDetails: info,
+    });
+  } catch (err) {
+    console.error('yt-dlp error:', err);
+    res.status(500).json({ error: 'Failed to fetch video info', details: err.message });
+  }
 });
 
 // Endpoint to download video using ytdl-core
@@ -71,27 +68,25 @@ app.get('/api/download', downloadLimiter, async (req, res) => {
   // Download video and audio separately, merge with ffmpeg, then send the merged file
   const fs = require('fs');
   const path = require('path');
-  const { execFileSync } = require('child_process');
   const videoFile = path.join(__dirname, `${id}-${formatId}-video.mp4`);
   const audioFile = path.join(__dirname, `${id}-bestaudio-audio.mp4`);
   const outputFile = path.join(__dirname, `${id}-${formatId}-merged.mp4`);
 
   try {
     // Download video only
-    execFileSync('yt-dlp', [
-      '-f', formatId,
-      '-o', videoFile,
-      '--cookies', 'cookies.txt',
-      `https://www.youtube.com/watch?v=${id}`
-    ]);
+    await ytdlp(`https://www.youtube.com/watch?v=${id}`, {
+      output: videoFile,
+      format: formatId,
+      cookies: 'cookies.txt',
+    });
     // Download best audio only
-    execFileSync('yt-dlp', [
-      '-f', 'bestaudio',
-      '-o', audioFile,
-      '--cookies', 'cookies.txt',
-      `https://www.youtube.com/watch?v=${id}`
-    ]);
+    await ytdlp(`https://www.youtube.com/watch?v=${id}`, {
+      output: audioFile,
+      format: 'bestaudio',
+      cookies: 'cookies.txt',
+    });
     // Merge with ffmpeg
+    const { execFileSync } = require('child_process');
     execFileSync('ffmpeg', [
       '-y',
       '-i', videoFile,
